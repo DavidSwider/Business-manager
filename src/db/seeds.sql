@@ -1,4 +1,4 @@
-INSERT INTO movies (movie_name)
+INSERT INTO departments (dept_name)
 VALUES ('Lion King'),
        ('The Godfather'),
        ('West Side Story'),
