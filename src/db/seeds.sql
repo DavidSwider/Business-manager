@@ -1,16 +1,26 @@
 INSERT INTO departments (dept_name)
-VALUES ('Lion King'),
-       ('The Godfather'),
-       ('West Side Story'),
-       ('Parasite'),
-       ('The Wizard of Oz');
+VALUES ('Sales'),
+       ('Engineering'),
+       ('Finance'),
+       ('Legal');
 
-INSERT INTO reviews (movie_id, review)
-VALUES (1, 'Zazu is underrated. Give that hornbill a sequel!'),
-       (2, 'I''m gonna make him an offer you can''t refuse, watch this movie'),
-       (1, 'Scar is the lion everyone loves to hate'),
-       (3, 'Ten years of ballet and three years of tap to join a gang in this neighborhood'),
-       (5, 'The tin man gave a metallic, hollow performance'),
-       (1, 'Hakuna matata'),
-       (5, 'Those flying monkeys are nightmare fuel!');
+INSERT INTO roles (title, salary, departments_id)
+VALUES ('Salesperson', 100000, 1),
+       ('Sales Manager', 150000, 1),
+       ('Engineer', 120000, 2),
+       ('Lawyer', 120000, 3),
+       ('Accountant', 85000, 4),
+       ('Account Manager', 150000, 4);
+
+INSERT INTO departments (first_name, last_name, roles_id, manager_id)
+VALUES ('John', 'Doe', 1, 1),
+       ('Jane', 'Doe', 2, 2),
+       ('Alice', 'won', 3, 3),
+       ('Bob', 'sun', 4, 4),
+       ('Charlie', 'ming', 5, 5),
+       ('David', 'swider', 1, 6),
+       ('Eve', 'adams', 2, 7),
+       ('Frank', 'dog', 3, 8),
+       ('Grace', 'hope', 4, 9);
+
        

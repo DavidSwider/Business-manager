@@ -1,116 +1,124 @@
-import express from 'express';
-import { QueryResult } from 'pg';
-import { pool, connectToDb } from './connection.js';
 
-await connectToDb();
+import inquirer from 'inquirer';
+import DatabaseService from './index.js'; 
 
-const PORT = process.env.PORT || 3001;
-const app = express();
 
-// Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+interface DepartmentInput {
+  deptName: string;
+}
 
-// Create a movie
-app.post('/api/new-movie', ({ body }, res) => {
-  const sql = `INSERT INTO movies (movie_name)
-    VALUES ($1)`;
-  const params = [body.movie_name];
+interface RoleInput {
+  roleName: string;
+  roleSalary: number;
+  roleDept: number;
+}
 
-  pool.query(sql, params, (err, _result) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
+interface EmployeeInput {
+  empName: string;
+  empRole: number;
+  empManager?: number;
+}
+
+interface UpdateEmployeeInput {
+  empId: number;
+  newRoleId: number;
+}
+
+const dbService = new DatabaseService();
+
+async function showMenu(): Promise<void> {
+  console.log('\nWelcome to teamDepo!\n');
+
+  while (true) {
+    try {
+      const { action }: { action: string } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: 'Choose an option:',
+          choices: [
+            'View all departments',
+            'View all roles',
+            'View all employees',
+            'Add a department',
+            'Add a role',
+            'Add an employee',
+            'Update an employee role',
+            'Exit',
+          ],
+        },
+      ]);
+
+      if (action === 'Exit') {
+        console.log('Closing the CMS. Goodbye!');
+        process.exit(0);
+      }
+
+      await handleUserSelection(action);
+    } catch (error) {
+      console.error('An error occurred:', (error as Error).message);
     }
-    res.json({
-      message: 'success',
-      data: body,
-    });
-  });
-});
+  }
+}
 
-// Read all movies
-app.get('/api/movies', (_req, res) => {
-  const sql = `SELECT id, movie_name AS title FROM movies`;
+async function handleUserSelection(action: string): Promise<void> {
+  try {
+    switch (action) {
+      case 'View all departments':
+        console.table(await dbService.getDepartments());
+        break;
 
-  pool.query(sql, (err: Error, result: QueryResult) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+      case 'View all roles':
+        console.table(await dbService.getRoles());
+        break;
+
+      case 'View all employees':
+        console.table(await dbService.getEmployees());
+        break;
+
+      case 'Add a department': {
+        const { deptName }: DepartmentInput = await inquirer.prompt([
+          { type: 'input', name: 'deptName', message: 'Enter new department name:' },
+        ]);
+        console.log('Added Department:', await dbService.addDepartment(deptName));
+        break;
+      }
+
+      case 'Add a role': {
+        const { roleName, roleSalary, roleDept }: RoleInput = await inquirer.prompt([
+          { type: 'input', name: 'roleName', message: 'Enter role name:' },
+          { type: 'number', name: 'roleSalary', message: 'Enter role salary:' },
+          { type: 'number', name: 'roleDept', message: 'Enter department ID:' },
+        ]);
+        console.log('Added Role:', await dbService.addRole(roleName, roleSalary, roleDept));
+        break;
+      }
+
+      case 'Add an employee': {
+        const { empName, empRole, empManager }: EmployeeInput = await inquirer.prompt([
+          { type: 'input', name: 'empName', message: 'Enter employee name:' },
+          { type: 'number', name: 'empRole', message: 'Enter role ID:' },
+          { type: 'number', name: 'empManager', message: 'Enter manager ID (or leave blank):', default: null },
+        ]);
+        console.log('Added Employee:', await dbService.addEmployee(empName, empRole, empManager));
+        break;
+      }
+
+      case 'Update an employee role': {
+        const { empId, newRoleId }: UpdateEmployeeInput = await inquirer.prompt([
+          { type: 'number', name: 'empId', message: 'Enter employee ID:' },
+          { type: 'number', name: 'newRoleId', message: 'Enter new role ID:' },
+        ]);
+        console.log('Updated Employee:', await dbService.updateEmployeeRole(empId, newRoleId));
+        break;
+      }
+
+      default:
+        console.log('Invalid option, please try again.');
     }
-    const { rows } = result;
-    res.json({
-      message: 'success',
-      data: rows,
-    });
-  });
-});
+  } catch (error) {
+    console.error('Error processing request:', (error as Error).message);
+  }
+}
 
-// Delete a movie
-app.delete('/api/movie/:id', (req, res) => {
-  const sql = `DELETE FROM movies WHERE id = $1`;
-  const params = [req.params.id];
-
-  pool.query(sql, params, (err: Error, result: QueryResult) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-    } else if (!result.rowCount) {
-      res.json({
-        message: 'Movie not found',
-      });
-    } else {
-      res.json({
-        message: 'deleted',
-        changes: result.rowCount,
-        id: req.params.id,
-      });
-    }
-  });
-});
-
-// Read list of all reviews and associated movie name using LEFT JOIN
-app.get('/api/movie-reviews', (_req, res) => {
-  const sql = `SELECT movies.movie_name AS movie, reviews.review FROM reviews LEFT JOIN movies ON reviews.movie_id = movies.id ORDER BY movies.movie_name;`;
-  pool.query(sql, (err: Error, result: QueryResult) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    const { rows } = result;
-    res.json({
-      message: 'success',
-      data: rows,
-    });
-  });
-});
-
-// BONUS: Update review
-app.put('/api/review/:id', (req, res) => {
-  const sql = `UPDATE reviews SET review = $1 WHERE id = $2`;
-  const params = [req.body.review, req.params.id];
-
-  pool.query(sql, params, (err: Error, result: QueryResult) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-    } else if (!result.rowCount) {
-      res.json({
-        message: 'Review not found',
-      });
-    } else {
-      res.json({
-        message: 'success',
-        data: req.body,
-        changes: result.rowCount,
-      });
-    }
-  });
-});
-
-// Default response for any other request (Not Found)
-app.use((_req, res) => {
-  res.status(404).end();
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+showMenu();
