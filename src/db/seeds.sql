@@ -12,7 +12,7 @@ VALUES ('Salesperson', 100000, 1),
        ('Accountant', 85000, 4),
        ('Account Manager', 150000, 4);
 
-INSERT INTO departments (first_name, last_name, roles_id, manager_id)
+INSERT INTO employes (first_name, last_name, roles_id, manager_id)
 VALUES ('John', 'Doe', 1, 1),
        ('Jane', 'Doe', 2, 2),
        ('Alice', 'won', 3, 3),
