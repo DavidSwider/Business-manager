@@ -22,7 +22,7 @@ async function showMenu() {
                 },
             ]);
             if (action === 'Exit') {
-                console.log('Closing the CMS. Goodbye!');
+                console.log('Goodbye');
                 process.exit(0);
             }
             await handleUserSelection(action);

@@ -96,14 +96,14 @@ class DatabaseService {
           validate: (input: string) => (input.trim() ? true : "Role title cannot be empty."),
         },
         {
-          type: "input", // Change from "number" to "input"
+          type: "input", 
           name: "salary",
           message: "Enter role salary:",
           validate: (input: string) => {
             const num = Number(input);
             return num > 0 ? true : "Salary must be a positive number.";
           },
-          filter: (input: string) => Number(input), // Convert input to number
+          filter: (input: string) => Number(input), 
         },
         {
           type: "list",
